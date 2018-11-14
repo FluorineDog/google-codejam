@@ -5,8 +5,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
-using std::cin;
 using std::cerr;
+using std::cin;
 using std::cout;
 using std::endl;
 using std::map;
@@ -39,8 +39,8 @@ ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& const
         }
     }
 
-    for(auto rule: constraints[checkpoint]){
-        if(check(rule, init_substr) != 0){
+    for(auto rule : constraints[checkpoint]) {
+        if(check(rule, init_substr) != 0) {
             cerr << "@";
             return 0;
         }
@@ -77,11 +77,30 @@ ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& const
     return sum;
 }
 
+string shortcut(int n, map<int, vector<tuple<int, int>>>& limit, int rank) {
+    string str(n, ' ');
+    for(auto [k, vs] : limit) {
+        for(auto [_, c] : vs) {
+            str[k] = c + '0';
+        }
+    }
+    for(int i = str.size(); i-- > 0; ) {
+        if(str[i] != ' ') {
+            continue;
+        } else {
+        }
+        str[i] = '0' + (rank % 2);
+        rank >>= 1;
+    }
+    return str;
+}
+
 string workload() {
     int str_len, constraint_count;
     ll rank;
     cin >> str_len >> constraint_count >> rank;
     rank--;
+    ll raw_rank = rank;
     map<int, vector<tuple<int, int>>> limits;
     for(int i = 0; i < constraint_count; i++) {
         int a, b, c;
@@ -100,6 +119,7 @@ string workload() {
             prefix += "0";
         }
     }
+    prefix = shortcut(str_len, limits, raw_rank);
     return prefix;
 }
 
