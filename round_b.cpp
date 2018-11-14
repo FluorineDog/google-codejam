@@ -14,22 +14,25 @@ using std::string;
 using std::tuple;
 using std::vector;
 using ll = long long;
+// <len, count>
 int check(tuple<int, int> rule, int prefix) {
     auto [len, count] = rule;
     auto old_count = __builtin_popcount(prefix & ((1 << len) - 1));
     return count - old_count;
 }
 
-constexpr int max_diff = 8;
+constexpr ll inf = 3ULL << 60;
+constexpr int max_diff = 15;
 constexpr int max_diff_count = 1 << max_diff;
 constexpr int MASK = max_diff_count - 1;
-ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& constraints) {
+ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>> &constraints) {
     vector<ll> record(max_diff_count, 0);
     vector<ll> new_record(max_diff_count, 0);
     int checkpoint = preload.size();
     if(preload.size() > max_diff) {
         preload = preload.substr(preload.size() - max_diff, max_diff);
     }
+
     int init_substr = 0;
     for(auto ch : preload) {
         if(ch == '1') {
@@ -41,7 +44,7 @@ ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& const
 
     for(auto rule : constraints[checkpoint]) {
         if(check(rule, init_substr) != 0) {
-            cerr << "@";
+            // cerr << "@";
             return 0;
         }
     }
@@ -54,6 +57,7 @@ ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& const
         new_record.clear();
         new_record.resize(max_diff_count, 0);
         for(int substr = 0; substr < max_diff_count; substr++) {
+            if(record[substr] == 0) continue;
             bool flag_1 = true;
             bool flag_0 = true;
             for(auto rule : constraints[checkpoint]) {
@@ -62,35 +66,41 @@ ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>>& const
                 flag_0 = flag_0 && digit == 0;
             }
             if(flag_1) {
-                new_record[MASK & ((substr << 1) | 1)] += record[substr];
+                auto &x = new_record[MASK & ((substr << 1) | 1)];
+                x += record[substr];
+                if(x > inf) x = inf;
             }
             if(flag_0) {
-                new_record[MASK & (substr << 1) | 0] += record[substr];
+                auto &x = new_record[MASK & (substr << 1) | 0];
+                x += record[substr];
+                if(x > inf) x = inf;
             }
         }
         new_record.swap(record);
     }
     ll sum = 0;
     for(int i = 0; i < max_diff_count; ++i) {
-        sum += record[i];
+        auto &x = sum += record[i];
+        if(x > inf) x = inf;
     }
     return sum;
 }
 
-string shortcut(int n, map<int, vector<tuple<int, int>>>& limit, int rank) {
+string shortcut(int n, map<int, vector<tuple<int, int>>> &limit, ll rank) {
     string str(n, ' ');
     for(auto [k, vs] : limit) {
         for(auto [_, c] : vs) {
             str[k] = c + '0';
         }
     }
-    for(int i = str.size(); i-- > 0; ) {
+    // cout << "---------------" << rank << "----------------";
+    for(int i = str.size(); i-- > 0;) {
         if(str[i] != ' ') {
             continue;
-        } else {
         }
         str[i] = '0' + (rank % 2);
-        rank >>= 1;
+        // cout << "$<"<< rank % 2 << ">$" ;
+        rank = rank / 2;
     }
     return str;
 }
@@ -111,7 +121,7 @@ string workload() {
     int sum = 0;
     for(int i = 0; i < str_len; ++i) {
         ll count = counter(prefix, str_len, limits);
-        cerr << i << "  %%" << rank << "$" << count << "#" << prefix << endl;
+        // cerr << i << "  %%" << rank << "$" << count << "#" << prefix << endl;
         if(rank >= count) {
             prefix += "1";
             rank -= count;
@@ -119,7 +129,8 @@ string workload() {
             prefix += "0";
         }
     }
-    prefix = shortcut(str_len, limits, raw_rank);
+    // cerr << raw_rank << endl;
+    // prefix = shortcut(str_len, limits, raw_rank);
     return prefix;
 }
 
@@ -129,7 +140,7 @@ int main() {
     cin >> N;
     for(int i = 0; i < N; ++i) {
         auto ans = workload();
-        cerr << "checking case" << i << endl;
+        // cerr << "checking case" << i << endl;
         cout << "Case #" << i + 1 << ": " << std::fixed << std::setprecision(6) << ans
              << std::endl;
     }
