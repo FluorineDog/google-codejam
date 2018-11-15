@@ -18,11 +18,13 @@ ll record[20][9] = {0};
 class Solution {
   public:
     ll workload() {
-        ll total_count;
+        generate();
+        ll total_count = 0;
         vector<ll> count_map(200001, 0);
         std::sort(data.begin(), data.end());
         // data[beg+] >= 2
         int beg = std::upper_bound(data.begin(), data.end(), 1) - data.begin();
+        std::cerr << beg << endl;
         for(int i = 0; i < N; ++i) {
             count_map[data[i]]++;
         }
