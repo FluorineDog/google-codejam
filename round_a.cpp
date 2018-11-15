@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
@@ -14,63 +15,59 @@ using std::vector;
 // N-digit number that satify the requirement
 using ll = long long;
 ll record[20][9] = {0};
-
-void init() {
-    for(int i = 0; i < 9; ++i) {
-        record[0][0] = 0;
-    }
-    record[0][0] = 1;
-    for(int i = 1; i < 20; ++i) {
-        for(int digit = 0; digit < 9; ++digit) {
-            for(int mod = 0; mod < 9; ++mod) {
-                record[i][(mod + digit) % 9] += record[i - 1][mod];
+class Solution {
+  public:
+    ll workload() {
+        ll total_count;
+        vector<ll> count_map(200001, 0);
+        std::sort(data.begin(), data.end());
+        // data[beg+] >= 2
+        int beg = std::upper_bound(data.begin(), data.end(), 1) - data.begin();
+        for(int i = 0; i < N; ++i) {
+            count_map[data[i]]++;
+        }
+        for(int i = beg; i < N; ++i) {
+            for(int j = i + 1; j < N; ++j) {
+                ll product = (ll)data[i] * data[j];
+                if(product >= 200001) break;
+                total_count += count_map[product];
             }
         }
-    }
-    // for(int i = 0; i < 20; ++i){
-    //     for(int j = 0; j < 9; ++j){
-    //         cout << record[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // }
-}
+        auto C_n_2 = [](ll n) { return n * (n - 1) / 2; };
+        auto C_n_3 = [](ll n) { return n * (n - 1) * (n - 2) / 6; };
 
-long long count(ll limit_num) {
-    if(limit_num == 0 || limit_num == 1) {
-        return 0;
-    }
-    auto limit = std::to_string(limit_num);
-    int N = limit.size();
-    ll total_count = 0;
-    int prefix_sum = 0;
-    // cout << "$" <<limit << endl;
-    for(int prefix_len = 0; prefix_len < N; ++prefix_len) {
-        int cur_digit = limit[prefix_len] - '0';
-        for(int digit = 0; digit < cur_digit; ++digit) {
-            for(int mod = 0; mod < 9; ++mod) {
-                if((mod + prefix_sum + digit) % 9 == 0) continue;
-                // cout << "<"  << N - 1 - prefix_len << "," << mod << ">";
-                total_count += record[N - 1 - prefix_len][mod];
-            }
+        ll count_1 = count_map[1];
+        ll count_0 = count_map[0];
+        // 1 * n = n
+        for(int i = 2; i < count_map.size(); ++i) {
+            total_count += count_1 * C_n_2(count_map[i]);
         }
-        prefix_sum += cur_digit;
+        // 1 * 1 = 1
+        total_count += C_n_3(count_1);
+        // 0 * (1/n) = 0
+        total_count += C_n_2(count_0) * (N - count_0);
+        // 0 * 0 = 0
+        total_count += C_n_3(count_0);
+        return total_count;
     }
-    return total_count;
-}
 
-long long workload() {
-    ll left, right;
-    cin >> left >> right;
-    return count(right + 1) - count(left);
-}
-
+  private:
+    void generate() {
+        cin >> N;
+        data.resize(N);
+        for(auto &x : data) {
+            cin >> x;
+        }
+    }
+    int N;
+    vector<int> data;
+};
 int main() {
     // freopen("input.txt", "r", stdin);
     int N;
     cin >> N;
-    init();
     for(int i = 0; i < N; ++i) {
-        auto ans = workload();
+        auto ans = Solution().workload();
         cout << "Case #" << i + 1 << ": " << ans << std::endl;
     }
 }
