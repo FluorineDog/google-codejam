@@ -11,10 +11,7 @@ using std::map;
 using std::pair;
 using std::string;
 using std::vector;
-// record is to represent
-// N-digit number that satify the requirement
 using ll = long long;
-ll record[20][9] = {0};
 class Solution {
   public:
     ll workload() {

@@ -1,147 +1,72 @@
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <string>
-#include <tuple>
 #include <vector>
-using std::cerr;
 using std::cin;
 using std::cout;
 using std::endl;
+using std::make_pair;
 using std::map;
+using std::pair;
 using std::string;
-using std::tuple;
 using std::vector;
 using ll = long long;
-// <len, count>
-int check(tuple<int, int> rule, int prefix) {
-    auto [len, count] = rule;
-    auto old_count = __builtin_popcount(prefix & ((1 << len) - 1));
-    return count - old_count;
-}
-
-constexpr ll inf = 3ULL << 60;
-constexpr int max_diff = 15;
-constexpr int max_diff_count = 1 << max_diff;
-constexpr int MASK = max_diff_count - 1;
-ll counter(string preload, int str_len, map<int, vector<tuple<int, int>>> &constraints) {
-    vector<ll> record(max_diff_count, 0);
-    vector<ll> new_record(max_diff_count, 0);
-    int checkpoint = preload.size();
-    if(preload.size() > max_diff) {
-        preload = preload.substr(preload.size() - max_diff, max_diff);
-    }
-
-    int init_substr = 0;
-    for(auto ch : preload) {
-        if(ch == '1') {
-            init_substr = 2 * init_substr + 1;
-        } else {
-            init_substr = 2 * init_substr + 0;
+class Solution {
+  public:
+    ll workload() {
+        generate();
+        ll total_count = 0;
+        vector<ll> count_map(200001, 0);
+        std::sort(data.begin(), data.end());
+        // data[beg+] >= 2
+        int beg = std::upper_bound(data.begin(), data.end(), 1) - data.begin();
+        std::cerr << beg << endl;
+        for(int i = 0; i < N; ++i) {
+            count_map[data[i]]++;
         }
-    }
-
-    for(auto rule : constraints[checkpoint]) {
-        if(check(rule, init_substr) != 0) {
-            // cerr << "@";
-            return 0;
-        }
-    }
-
-    init_substr = MASK & (init_substr << 1);
-    ++checkpoint;
-
-    record[init_substr] = 1;
-    for(; checkpoint < str_len; checkpoint++) {
-        new_record.clear();
-        new_record.resize(max_diff_count, 0);
-        for(int substr = 0; substr < max_diff_count; substr++) {
-            if(record[substr] == 0) continue;
-            bool flag_1 = true;
-            bool flag_0 = true;
-            for(auto rule : constraints[checkpoint]) {
-                int digit = check(rule, substr);
-                flag_1 = flag_1 && digit == 1;
-                flag_0 = flag_0 && digit == 0;
-            }
-            if(flag_1) {
-                auto &x = new_record[MASK & ((substr << 1) | 1)];
-                x += record[substr];
-                if(x > inf) x = inf;
-            }
-            if(flag_0) {
-                auto &x = new_record[MASK & (substr << 1) | 0];
-                x += record[substr];
-                if(x > inf) x = inf;
+        for(int i = beg; i < N; ++i) {
+            for(int j = i + 1; j < N; ++j) {
+                ll product = (ll)data[i] * data[j];
+                if(product >= 200001) break;
+                total_count += count_map[product];
             }
         }
-        new_record.swap(record);
-    }
-    ll sum = 0;
-    for(int i = 0; i < max_diff_count; ++i) {
-        auto &x = sum += record[i];
-        if(x > inf) x = inf;
-    }
-    return sum;
-}
+        auto C_n_2 = [](ll n) { return n * (n - 1) / 2; };
+        auto C_n_3 = [](ll n) { return n * (n - 1) * (n - 2) / 6; };
 
-string shortcut(int n, map<int, vector<tuple<int, int>>> &limit, ll rank) {
-    string str(n, ' ');
-    for(auto [k, vs] : limit) {
-        for(auto [_, c] : vs) {
-            str[k] = c + '0';
+        ll count_1 = count_map[1];
+        ll count_0 = count_map[0];
+        // 1 * n = n
+        for(int i = 2; i < count_map.size(); ++i) {
+            total_count += count_1 * C_n_2(count_map[i]);
+        }
+        // 1 * 1 = 1
+        total_count += C_n_3(count_1);
+        // 0 * (1/n) = 0
+        total_count += C_n_2(count_0) * (N - count_0);
+        // 0 * 0 = 0
+        total_count += C_n_3(count_0);
+        return total_count;
+    }
+
+  private:
+    void generate() {
+        cin >> N;
+        data.resize(N);
+        for(auto &x : data) {
+            cin >> x;
         }
     }
-    // cout << "---------------" << rank << "----------------";
-    for(int i = str.size(); i-- > 0;) {
-        if(str[i] != ' ') {
-            continue;
-        }
-        str[i] = '0' + (rank % 2);
-        // cout << "$<"<< rank % 2 << ">$" ;
-        rank = rank / 2;
-    }
-    return str;
-}
-
-string workload() {
-    int str_len, constraint_count;
-    ll rank;
-    cin >> str_len >> constraint_count >> rank;
-    rank--;
-    ll raw_rank = rank;
-    map<int, vector<tuple<int, int>>> limits;
-    for(int i = 0; i < constraint_count; i++) {
-        int a, b, c;
-        cin >> a >> b >> c;
-        limits[b - 1].emplace_back(b - a, c);
-    }
-    string prefix = "";
-    int sum = 0;
-    for(int i = 0; i < str_len; ++i) {
-        ll count = counter(prefix, str_len, limits);
-        // cerr << i << "  %%" << rank << "$" << count << "#" << prefix << endl;
-        if(rank >= count) {
-            prefix += "1";
-            rank -= count;
-        } else {
-            prefix += "0";
-        }
-    }
-    // cerr << raw_rank << endl;
-    // prefix = shortcut(str_len, limits, raw_rank);
-    return prefix;
-}
-
+    int N;
+    vector<int> data;
+};
 int main() {
-    // freopen("build/input.txt",  "r", stdin);
+    // freopen("input.txt", "r", stdin);
     int N;
     cin >> N;
     for(int i = 0; i < N; ++i) {
-        auto ans = workload();
-        // cerr << "checking case" << i << endl;
-        cout << "Case #" << i + 1 << ": " << std::fixed << std::setprecision(6) << ans
-             << std::endl;
+        auto ans = Solution().workload();
+        cout << "Case #" << i + 1 << ": " << ans << std::endl;
     }
 }
