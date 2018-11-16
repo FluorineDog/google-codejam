@@ -16,36 +16,40 @@ using std::string;
 using std::tuple;
 using std::vector;
 using ll = long long;
-constexpr int inf = 1 << 30;
+constexpr ll inf = 1LL << 44;
 class Solution {
   public:
     ll workload() {
         generate();
         // score, status
-        priority_queue<pair<int, int>> source;
+        vector<pair<ll, ll>> source;
         // rank_acc for >= score
         vector<ll> sums;
         // score, height
-        vector<tuple<int, int>> records;
-        sums.emplace_back(0);
-        records.emplace_back(inf, 0);
+        vector<tuple<ll, ll>> records;
+        // sums.emplace_back(0);
+        // records.emplace_back(inf, 0);
         for(auto [l, r] : ranges) {
-            source.emplace(l - 1, -1);
-            source.emplace(r, +1);
+            source.emplace_back(l - 1, -1);
+            source.emplace_back(r, +1);
         }
+        std::sort(source.begin(), source.end());
         ll sum = 0;
         ll last_score = inf;
         ll last_height = 0;
         while(!source.empty()) {
-            auto [score, diff] = source.top();
-            source.pop();
+            auto [score, diff] = source.back();
+            source.pop_back();
             while(!source.empty()) {
-                auto [s, d] = source.top();
+                auto [s, d] = source.back();
                 if(s == score) {
                     diff += d;
-                    source.pop();
+                    source.pop_back();
                 } else {
                     break;
+                }
+                if(diff == 0){
+                    continue;
                 }
             }
             sum += (last_score - score) * last_height;
@@ -58,7 +62,7 @@ class Solution {
         // find right-most x that rank >= sum
         // calculate
         ll result = 0;
-        for(int k_id = 0; k_id < Ks.size(); ++k_id) {
+        for(ll k_id = 0; k_id < Ks.size(); ++k_id) {
             ll rank = Ks[k_id] - 1;
             int it = std::upper_bound(sums.begin(), sums.end(), rank) - sums.begin();
             if(it == sums.size()) {
@@ -66,7 +70,7 @@ class Solution {
             }
             it -= 1;
             auto [score, height] = records[it];
-            int real_score = score - (rank - sums[it]) / height;
+            ll real_score = score - (rank - sums[it]) / height;
             result += (k_id + 1) * real_score;
         }
         return result;
@@ -82,16 +86,16 @@ class Solution {
         cin >> y1 >> y2 >> a2 >> b2 >> c2 >> m2;
         cin >> z1 >> z2 >> a3 >> b3 >> c3 >> m3;
         for(int i = 0; i < N; ++i) {
-            int l = std::min(x1, y1) + 1;
-            int r = std::max(x1, y1) + 1;
+            ll l = std::min(x1, y1) + 1;
+            ll r = std::max(x1, y1) + 1;
             ranges.emplace_back(l, r);
             if(i < Q) {
                 ll k = z1 + 1;
                 Ks.emplace_back(k);
             }
-            int new_x = (a1 * x2 + b1 * x1 + c1) % m1;
-            int new_y = (a2 * y2 + b2 * y1 + c2) % m2;
-            int new_z = (a3 * z2 + b3 * z1 + c3) % m3;
+            ll new_x = (a1 * x2  % m1+ b1 * x1  % m1+ c1) % m1;
+            ll new_y = (a2 * y2  % m2+ b2 * y1  % m2+ c2) % m2;
+            ll new_z = (a3 * z2  % m3+ b3 * z1  % m3+ c3) % m3;
             x1 = x2;
             x2 = new_x;
             y1 = y2;
@@ -99,17 +103,17 @@ class Solution {
             z1 = z2;
             z2 = new_z;
         }
-        for(auto r : ranges) {
-            cerr << r.first << "*" << r.second << " ";
-        }
-        cerr << endl;
-        for(auto x : Ks) {
-            cerr << x << " ";
-        }
-        cerr << endl;
+        // for(auto r : ranges) {
+        //     cerr << r.first << "*" << r.second << " ";
+        // }
+        // cerr << endl;
+        // for(auto x : Ks) {
+        //     cerr << x << " ";
+        // }
+        // cerr << endl;
     }
     int N, Q;
-    vector<pair<int, int>> ranges;
+    vector<pair<ll, ll>> ranges;
     vector<ll> Ks;
 };
 int main() {
