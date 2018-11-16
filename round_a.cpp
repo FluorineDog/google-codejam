@@ -62,7 +62,7 @@ class Solution {
     vector<int> data;
 };
 int main() {
-    // freopen("input.txt", "r", stdin);
+    freopen("input.txt", "r", stdin);
     int N;
     cin >> N;
     for(int i = 0; i < N; ++i) {

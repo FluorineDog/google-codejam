@@ -52,7 +52,7 @@ public:
     }
 
     bool isLinked(int a, int b) const {
-        return find(a) != find(b);
+        return find(a) == find(b);
     }
 
 private:
@@ -62,8 +62,6 @@ private:
 class Solution {
 public:
     Solution() {
-        generate();
-        gen_graph();
     }
 
     enum GridType {
@@ -77,7 +75,7 @@ public:
         if (value == -100000) {
             return Wall;
         } else if (value < 0) {
-            return Trap
+            return Trap;
         } else {
             return Potion;
         }
@@ -118,22 +116,19 @@ public:
                     case Wall:
                         continue;
                     case Potion: {
-                        int potion_id = tree.find(grid);
+                        const int potion_id = tree.find(grid);
                         if (!mapping.count(potion_id)) {
                             mapping[potion_id] = potion_id_gen++;
                         }
-                        potion_id = mapping[potion_id];
-                        value[potion_id] += matrix[grid];
+                        value[mapping[potion_id]] += matrix[grid];
                         break;
                     }
                     case Trap: {
-                        int trap_id = grid;
-                        if (!mapping.count(trap_id)) {
-                            mapping[trap_id] = trap_id_gen++;
+                        if (!mapping.count(grid)) {
+                            mapping[grid] = trap_id_gen++;
                         }
-                        trap_id = mapping[trap_id];
-                        value[trap_id] += matrix[trap_id];
-                        traps.insert(trap_id);
+                        traps.insert(grid);
+                        value[mapping[grid]] += matrix[grid];
                         break;
                     }
                 }
@@ -145,19 +140,25 @@ public:
         for (auto trap: traps) {
             auto diffs = {-M, +M, -1, +1};
             for (auto diff:diffs) {
-                int neighbor = trap + diff;
+                int neighbor = tree.find(trap + diff);
                 if (get_type(neighbor) == Wall) continue;
                 int v1 = mapping[trap];
                 int v2 = mapping[neighbor];
                 graph[v1].insert(v2);
                 graph[v2].insert(v1);
+//                cerr << "(" << v1 << "->" << v2 << ")";
             }
         }
+//        cerr << endl;
+//        for(auto [k, v]: value){
+//
+//            cerr << "[" << k << "==>" << v << "]" << endl;
+//        }
         auto[x, y] = source;
-        this->src_id = mapping[get_id(x, y)]; // todo
+        this->src_id = mapping[tree.find(get_id(x, y))]; // todo
         std::tie(x, y) = dest;
-        this->dst_id = mapping[get_id(x, y)]; // todo
-
+        this->dst_id = mapping[tree.find(get_id(x, y))]; // todo
+//        cerr << src_id << dst_id;
     }
 
     ll calculate_life(const FenwickTree &tree){
@@ -181,6 +182,7 @@ public:
         }
         auto life = calculate_life(last_tree);
         record[trap_vector] = life;
+//        cerr << "<" << trap_vector << "***" << life << ">" << endl;
         if(last_tree.isLinked(src_id, dst_id)){
             max_life = std::max(max_life, life);
         }
@@ -201,7 +203,7 @@ public:
                 continue;
             }
             FenwickTree new_tree = last_tree;
-            ll new_vector = trap_vector | (1 << trap_id)
+            ll new_vector = trap_vector | (1 << trap_id);
             for (auto nei: graph[trap_id]) {
                 if( nei >= 15 || (1 << nei) & trap_vector == 1){
                     new_tree.merge(nei, trap_id);
@@ -212,8 +214,11 @@ public:
     }
 
     long long workload() {
-        FenwickTree init(potion_count + 15);
-        max_life = 0;
+        generate();
+        gen_graph();
+        FenwickTree init(potion_count);
+
+        max_life = -1;
         explore(init, 0);
         return max_life;
     }
@@ -240,7 +245,12 @@ private:
                 cin >> get_raw_value(i, j);
             }
         }
-
+//        for(int i = 0; i < N; ++i){
+//            for(int j = 0; j < M; ++j){
+//                cerr << get_raw_value(i, j) << "\t";
+//            }
+//            cerr << endl;
+//        }
     }
 
 private:
@@ -264,6 +274,9 @@ private:
 };
 
 int main() {
+
+//    freopen("/home/mike/workspace/google-codejam/build/input.txt", "r", stdin);
+
     int N;
     cin >> N;
     for (int i = 0; i < N; ++i) {
