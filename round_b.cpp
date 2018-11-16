@@ -39,11 +39,13 @@ class Solution {
         while(!source.empty()) {
             auto [score, diff] = source.top();
             source.pop();
-            while(true) {
+            while(!source.empty()) {
                 auto [s, d] = source.top();
                 if(s == score) {
                     diff += d;
                     source.pop();
+                } else {
+                    break;
                 }
             }
             sum += (last_score - score) * last_height;
