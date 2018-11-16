@@ -48,7 +48,7 @@ class Solution {
                 } else {
                     break;
                 }
-                if(diff == 0){
+                if(diff == 0) {
                     continue;
                 }
             }
@@ -89,17 +89,17 @@ class Solution {
             ll l = std::min(x1, y1) + 1;
             ll r = std::max(x1, y1) + 1;
             ranges.emplace_back(l, r);
-            if(i < Q) {
-                ll k = z1 + 1;
-                Ks.emplace_back(k);
-            }
-            ll new_x = (a1 * x2  % m1+ b1 * x1  % m1+ c1) % m1;
-            ll new_y = (a2 * y2  % m2+ b2 * y1  % m2+ c2) % m2;
-            ll new_z = (a3 * z2  % m3+ b3 * z1  % m3+ c3) % m3;
+            ll new_x = (a1 * x2 % m1 + b1 * x1 % m1 + c1) % m1;
+            ll new_y = (a2 * y2 % m2 + b2 * y1 % m2 + c2) % m2;
             x1 = x2;
             x2 = new_x;
             y1 = y2;
             y2 = new_y;
+        }
+        for(int i = 0; i < Q; ++i) {
+            ll new_z = (a3 * z2 % m3 + b3 * z1 % m3 + c3) % m3;
+            ll k = z1 + 1;
+            Ks.emplace_back(k);
             z1 = z2;
             z2 = new_z;
         }
