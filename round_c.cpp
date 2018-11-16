@@ -176,7 +176,7 @@ public:
         return life;
     }
 
-    void explore(const FenwickTree &last_tree, ll trap_vector) {
+    void explore(const FenwickTree &last_tree, const ll trap_vector){
         if(record.count(trap_vector)){
             return;
         }
@@ -187,9 +187,11 @@ public:
             max_life = std::max(max_life, life);
         }
 
-        int src_id = last_tree.find(this->src_id);
+        const int src_id = last_tree.find(this->src_id);
         for (int trap_id = 0; trap_id < trap_count; ++trap_id) {
-            if (trap_vector & (1 << trap_id) == 1) {
+//            cerr  << "fucking" <<  trap_id << "at" << trap_vector << " ";
+            if ((trap_vector & (1 << trap_id)) != 0) {
+//                cerr << "skip dup" << endl;
                 continue;
             }
             for (auto nei: graph[trap_id]) {
@@ -197,18 +199,27 @@ public:
                     goto deal;
                 }
             }
+//            cerr << "skip inner" << endl;
             continue;
             deal:
-            if (life < value[trap_id]) {
+            if (life + value[trap_id] < 0) {
+//                cerr << life  << "|"<< value[trap_id] << "|"<< trap_vector << endl;
+//                cerr << "skip lost life" << endl;
                 continue;
+            } else {
+//                cerr << life  << "&"<< value[trap_id] << "&"<< trap_vector << endl;
             }
             FenwickTree new_tree = last_tree;
             ll new_vector = trap_vector | (1 << trap_id);
-            for (auto nei: graph[trap_id]) {
-                if( nei >= 15 || (1 << nei) & trap_vector == 1){
+            for (auto nei: graph.at(trap_id)) {
+                if( nei >= 15 || ((1 << nei) & trap_vector) != 0) {
+//                    cerr << "[" << nei << "]";
                     new_tree.merge(nei, trap_id);
+                } else {
+//                    cerr << "<" << nei  << ">";
                 }
             }
+//            cerr << endl;
             explore(new_tree, new_vector);
         }
     }
