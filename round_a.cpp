@@ -16,53 +16,32 @@ class Solution {
   public:
     ll workload() {
         generate();
-        ll total_count = 0;
-        vector<ll> count_map(200001, 0);
         std::sort(data.begin(), data.end());
-        // data[beg+] >= 2
-        int beg = std::upper_bound(data.begin(), data.end(), 1) - data.begin();
-        std::cerr << beg << endl;
-        for(int i = 0; i < N; ++i) {
-            count_map[data[i]]++;
-        }
-        for(int i = beg; i < N; ++i) {
-            for(int j = i + 1; j < N; ++j) {
-                ll product = (ll)data[i] * data[j];
-                if(product >= 200001) break;
-                total_count += count_map[product];
+        string last = "xx";
+        ll forbid_count = 0;
+        for(const auto& x: data){
+            if(x.substr(0, last.size()) == last){
+                continue;
             }
+            forbid_count += 1LL << (N - x.size()) ;
+            last = x;
         }
-        auto C_n_2 = [](ll n) { return n * (n - 1) / 2; };
-        auto C_n_3 = [](ll n) { return n * (n - 1) * (n - 2) / 6; };
-
-        ll count_1 = count_map[1];
-        ll count_0 = count_map[0];
-        // 1 * n = n
-        for(int i = 2; i < count_map.size(); ++i) {
-            total_count += count_1 * C_n_2(count_map[i]);
-        }
-        // 1 * 1 = 1
-        total_count += C_n_3(count_1);
-        // 0 * (1/n) = 0
-        total_count += C_n_2(count_0) * (N - count_0);
-        // 0 * 0 = 0
-        total_count += C_n_3(count_0);
-        return total_count;
+        return (1LL << N) - forbid_count;
     }
 
   private:
     void generate() {
-        cin >> N;
-        data.resize(N);
+        cin >> N >> P;
+        data.resize(P);
         for(auto &x : data) {
             cin >> x;
         }
     }
-    int N;
-    vector<int> data;
+    int N, P;
+    vector<string> data;
 };
 int main() {
-    freopen("input.txt", "r", stdin);
+//    freopen("/home/mike/workspace/google-codejam/input.txt", "r", stdin);
     int N;
     cin >> N;
     for(int i = 0; i < N; ++i) {
